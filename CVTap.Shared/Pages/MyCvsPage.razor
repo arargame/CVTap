@@ -1,0 +1,218 @@
+@page "/cvs"
+@inject ICvStorageService CvService
+@inject IShareService ShareService
+@inject IToastService Toast
+
+<div class="my-cvs-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">My CVs</h2>
+        
+        <!-- Native / Web Import Actions -->
+        <div>
+            <button class="btn-tap btn-primary-tap" style="width: auto; min-height: 38px; padding: 6px 14px; font-size: 0.85rem;"
+                    @onclick="TriggerNativeImport" disabled="@_isImporting">
+                <span>+ Import PDF</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden / Web file input support for web browser mode -->
+    <div class="cvtap-card mb-3" style="border-style: dashed; background-color: rgba(30, 41, 59, 0.5);">
+        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 8px;">
+            Select PDF file from device:
+        </div>
+        <div class="form-group mb-2">
+            <input type="text" class="form-control mb-2" placeholder="CV Profile Name (e.g. .NET Developer CV - EN)" 
+                   @bind="_newCvFriendlyName" />
+            <div class="d-flex gap-2">
+                <select class="form-select" style="max-width: 100px;" @bind="_newCvLanguage">
+                    <option value="EN">EN</option>
+                    <option value="TR">TR</option>
+                    <option value="DE">DE</option>
+                </select>
+                <InputFile OnChange="HandleWebFileSelected" accept=".pdf" class="form-control" />
+            </div>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="cvtap-card text-center py-4">
+            <p style="color: var(--text-secondary);">Loading your CVs...</p>
+        </div>
+    }
+    else if (_cvList.Count == 0)
+    {
+        <div class="cvtap-card text-center py-5">
+            <div style="font-size: 2.5rem; margin-bottom: 8px;">📁</div>
+            <h4 style="font-size: 1.1rem; font-weight: 600;">No CVs Saved</h4>
+            <p style="color: var(--text-secondary); font-size: 0.85rem;">
+                Tap "Import PDF" above to add your first resume.
+            </p>
+        </div>
+    }
+    else
+    {
+        @foreach (var cv in _cvList)
+        {
+            <div class="cvtap-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span style="font-weight: 700; font-size: 1.05rem;">@cv.Name</span>
+                            @if (cv.IsDefault)
+                            {
+                                <span class="badge-cvtap badge-default">★ Default</span>
+                            }
+                            <span class="badge-cvtap badge-lang">@cv.Language</span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                            <span>📄 @cv.FileName</span> • <span>@cv.FormattedSize</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-2" style="border-top: 1px solid var(--border-subtle);">
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">
+                        Added @cv.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
+                    </span>
+
+                    <div class="d-flex gap-2">
+                        @if (!cv.IsDefault)
+                        {
+                            <button class="btn-tap btn-secondary-tap" style="width:auto; min-height: 32px; padding: 4px 10px; font-size: 0.78rem;"
+                                    @onclick="() => SetDefaultAsync(cv.Id)">
+                                Make Default
+                            </button>
+                        }
+
+                        <button class="btn-icon" title="Share PDF" @onclick="() => ShareCvAsync(cv)">
+                            ↗️
+                        </button>
+
+                        <button class="btn-icon btn-danger-tap" title="Delete CV" @onclick="() => DeleteCvAsync(cv.Id)">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private bool _isLoading = true;
+    private bool _isImporting = false;
+    private List<CvProfile> _cvList = new();
+
+    private string _newCvFriendlyName = "";
+    private string _newCvLanguage = "EN";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCvsAsync();
+    }
+
+    private async Task LoadCvsAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var list = await CvService.GetAllAsync();
+            _cvList = list.ToList();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task TriggerNativeImport()
+    {
+        _isImporting = true;
+        try
+        {
+            var imported = await CvService.PickAndImportPdfAsync(_newCvFriendlyName, _newCvLanguage);
+            if (imported != null)
+            {
+                Toast.Success($"Imported {imported.Name} successfully!");
+                _newCvFriendlyName = "";
+                await LoadCvsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Import failed: {ex.Message}");
+        }
+        finally
+        {
+            _isImporting = false;
+        }
+    }
+
+    private async Task HandleWebFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        if (!file.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            Toast.Error("Only PDF files are supported.");
+            return;
+        }
+
+        _isImporting = true;
+        try
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize: 15 * 1024 * 1024); // max 15MB
+            var friendly = string.IsNullOrWhiteSpace(_newCvFriendlyName) 
+                ? Path.GetFileNameWithoutExtension(file.Name) 
+                : _newCvFriendlyName;
+
+            var imported = await CvService.SaveStreamAsync(stream, file.Name, friendly, _newCvLanguage);
+            Toast.Success($"Imported {imported.Name} successfully!");
+            _newCvFriendlyName = "";
+            await LoadCvsAsync();
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Upload failed: {ex.Message}");
+        }
+        finally
+        {
+            _isImporting = false;
+        }
+    }
+
+    private async Task SetDefaultAsync(Guid id)
+    {
+        await CvService.SetDefaultAsync(id);
+        Toast.Success("Set as default CV.");
+        await LoadCvsAsync();
+    }
+
+    private async Task ShareCvAsync(CvProfile cv)
+    {
+        var path = CvService.GetPhysicalPath(cv);
+        if (!File.Exists(path))
+        {
+            Toast.Error("File not found on device.");
+            return;
+        }
+        var success = await ShareService.ShareFileAsync(cv.Name, path);
+        if (success)
+        {
+            Toast.Success("Share sheet opened.");
+        }
+    }
+
+    private async Task DeleteCvAsync(Guid id)
+    {
+        var deleted = await CvService.DeleteAsync(id);
+        if (deleted)
+        {
+            Toast.Success("CV deleted.");
+            await LoadCvsAsync();
+        }
+    }
+}

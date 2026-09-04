@@ -1,0 +1,135 @@
+@page "/history"
+@inject IApplicationHistoryService HistoryService
+@inject IToastService Toast
+
+<div class="history-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">Application History</h2>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="cvtap-card text-center py-4">
+            <p style="color: var(--text-secondary);">Loading history...</p>
+        </div>
+    }
+    else if (_history.Count == 0)
+    {
+        <div class="cvtap-card text-center py-5">
+            <div style="font-size: 2.5rem; margin-bottom: 8px;">🕒</div>
+            <h4 style="font-size: 1.1rem; font-weight: 600;">No Applications Yet</h4>
+            <p style="color: var(--text-secondary); font-size: 0.85rem;">
+                When you tap EMAIL CV or SHARE CV, a record is kept here so you never forget where you applied.
+            </p>
+        </div>
+    }
+    else
+    {
+        @foreach (var item in _history)
+        {
+            <div class="cvtap-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <div style="font-weight: 700; font-size: 1rem; color: #f8fafc;">
+                            @(string.IsNullOrWhiteSpace(item.Position) ? "Application" : item.Position)
+                            @if (!string.IsNullOrWhiteSpace(item.Company))
+                            {
+                                <span style="color: var(--accent-indigo);">@@ @item.Company</span>
+                            }
+                        </div>
+                        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">
+                            ✉️ @(string.IsNullOrWhiteSpace(item.RecipientEmail) ? "(No recipient specified)" : item.RecipientEmail)
+                        </div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                            📄 CV: @item.CvTitle • @item.ActionTimestamp.ToLocalTime().ToString("g")
+                        </div>
+                    </div>
+
+                    <div>
+                        @if (item.Status == ApplicationStatus.Applied)
+                        {
+                            <span class="badge-cvtap badge-lang" style="background-color: rgba(16, 185, 129, 0.25); color: #34d399;">
+                                ✓ Applied
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge-cvtap" style="background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4);">
+                                Composer Opened
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-2" style="border-top: 1px solid var(--border-subtle);">
+                    <div>
+                        @if (item.Status != ApplicationStatus.Applied)
+                        {
+                            <button class="btn-tap btn-success-tap" style="width: auto; min-height: 30px; padding: 3px 10px; font-size: 0.78rem;"
+                                    @onclick="() => MarkAppliedAsync(item.Id)">
+                                Mark as Applied
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn-tap btn-secondary-tap" style="width: auto; min-height: 30px; padding: 3px 10px; font-size: 0.78rem;"
+                                    @onclick="() => RevertStatusAsync(item.Id)">
+                                Reset to Opened
+                            </button>
+                        }
+                    </div>
+
+                    <div>
+                        <button class="btn-icon btn-danger-tap" title="Delete record" @onclick="() => DeleteRecordAsync(item.Id)">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private bool _isLoading = true;
+    private List<ApplicationRecord> _history = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHistoryAsync();
+    }
+
+    private async Task LoadHistoryAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var list = await HistoryService.GetAllAsync();
+            _history = list.ToList();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task MarkAppliedAsync(Guid id)
+    {
+        await HistoryService.UpdateStatusAsync(id, ApplicationStatus.Applied);
+        Toast.Success("Application marked as Applied!");
+        await LoadHistoryAsync();
+    }
+
+    private async Task RevertStatusAsync(Guid id)
+    {
+        await HistoryService.UpdateStatusAsync(id, ApplicationStatus.ComposerOpened);
+        await LoadHistoryAsync();
+    }
+
+    private async Task DeleteRecordAsync(Guid id)
+    {
+        await HistoryService.DeleteAsync(id);
+        Toast.Success("Record deleted.");
+        await LoadHistoryAsync();
+    }
+}

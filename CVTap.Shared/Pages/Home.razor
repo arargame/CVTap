@@ -1,0 +1,359 @@
+@page "/"
+@inject ICvStorageService CvService
+@inject IEmailTemplateService TemplateService
+@inject IUserProfileService ProfileService
+@inject ITemplateEngine TemplateEngine
+@inject IEmailComposerService EmailComposer
+@inject IShareService ShareService
+@inject IApplicationHistoryService HistoryService
+@inject IToastService Toast
+@inject NavigationManager NavManager
+
+<div class="send-flow">
+    @if (_isLoading)
+    {
+        <div class="cvtap-card text-center py-4">
+            <p style="color: var(--text-secondary);">Loading your profile & templates...</p>
+        </div>
+    }
+    else if (_cvList.Count == 0)
+    {
+        <div class="cvtap-card text-center" style="padding: 32px 20px;">
+            <div style="font-size: 3rem; margin-bottom: 12px;">📄</div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">No CV Added Yet</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px;">
+                Import your PDF CV once to start sending job applications in seconds.
+            </p>
+            <button class="btn-tap btn-primary-tap" @onclick='() => NavManager.NavigateTo("/cvs")'>
+                + Import PDF CV
+            </button>
+        </div>
+    }
+    else
+    {
+        <!-- Step 1: CV Selection -->
+        <div class="cvtap-card">
+            <div class="form-group mb-0">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0">Select CV</label>
+                    <a href="/cvs" style="font-size: 0.78rem; color: var(--accent-indigo); text-decoration: none;">Manage CVs →</a>
+                </div>
+                <select class="form-select" @bind="_selectedCvId" @bind:after="OnFormChanged">
+                    @foreach (var cv in _cvList)
+                    {
+                        <option value="@cv.Id">
+                            @(cv.IsDefault ? "★ " : "")@cv.Name (@cv.Language) - @cv.FormattedSize
+                        </option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <!-- Step 2: Recipient Details -->
+        <div class="cvtap-card">
+            <div class="form-group">
+                <label class="form-label">To (Recipient Email) *</label>
+                <input type="email" class="form-control" placeholder="hr@company.com" 
+                       @bind="_recipientEmail" @bind:event="oninput" @bind:after="OnFormChanged" />
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group mb-0">
+                    <label class="form-label">Company</label>
+                    <input type="text" class="form-control" placeholder="e.g. Ubisoft" 
+                           @bind="_companyName" @bind:event="oninput" @bind:after="OnFormChanged" />
+                </div>
+                <div class="form-group mb-0">
+                    <label class="form-label">Position / Role</label>
+                    <input type="text" class="form-control" placeholder="e.g. .NET Developer" 
+                           @bind="_position" @bind:event="oninput" @bind:after="OnFormChanged" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Template Selector -->
+        <div class="cvtap-card">
+            <div class="form-group mb-0">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0">Email Template</label>
+                    <a href="/templates" style="font-size: 0.78rem; color: var(--accent-indigo); text-decoration: none;">All Templates →</a>
+                </div>
+                <select class="form-select" @bind="_selectedTemplateId" @bind:after="OnFormChanged">
+                    @foreach (var t in _templates)
+                    {
+                        <option value="@t.Id">
+                            @(t.IsDefault ? "★ " : "")@t.Title (@t.Language)
+                        </option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <!-- Step 4: Live Email Preview -->
+        <div class="preview-card">
+            <div class="preview-header">
+                <div class="preview-field">
+                    <span class="preview-field-label">To:</span>
+                    <span class="preview-field-value">@(string.IsNullOrWhiteSpace(_recipientEmail) ? "(Recipient email will appear here)" : _recipientEmail)</span>
+                </div>
+                <div class="preview-field">
+                    <span class="preview-field-label">Subject:</span>
+                    <span class="preview-field-value" style="font-weight: 600; color: #a5b4fc;">@(_renderedSubject)</span>
+                </div>
+            </div>
+            <div class="preview-body">@_renderedBody</div>
+            
+            @if (_currentCv != null)
+            {
+                <div style="padding: 0 14px 12px 14px;">
+                    <div class="preview-attachment">
+                        <span>📎</span>
+                        <span style="font-weight: 600;">@_currentCv.FileName</span>
+                        <span style="color: var(--text-muted);">(@_currentCv.FormattedSize)</span>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Step 5: High-Priority Fast Action Buttons -->
+        <div class="actions-grid">
+            <button class="btn-tap btn-primary-tap" @onclick="HandleEmailCv" disabled="@_isProcessing">
+                <span>✉️</span>
+                <span>EMAIL CV</span>
+            </button>
+
+            <button class="btn-tap btn-success-tap" @onclick="HandleShareCv" disabled="@_isProcessing">
+                <span>↗️</span>
+                <span>SHARE CV</span>
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    private bool _isLoading = true;
+    private bool _isProcessing = false;
+
+    private List<CvProfile> _cvList = new();
+    private List<EmailTemplate> _templates = new();
+    private UserProfile _profile = new();
+
+    private Guid _selectedCvId;
+    private Guid _selectedTemplateId;
+    private string _recipientEmail = "";
+    private string _companyName = "";
+    private string _position = "";
+
+    private string _renderedSubject = "";
+    private string _renderedBody = "";
+
+    private CvProfile? _currentCv
+    {
+        get
+        {
+            var found = _cvList.FirstOrDefault(c => c.Id == _selectedCvId);
+            if (found == null && _cvList.Count > 0)
+            {
+                found = _cvList.FirstOrDefault(c => c.IsDefault) ?? _cvList[0];
+                _selectedCvId = found.Id;
+            }
+            return found;
+        }
+    }
+
+    private EmailTemplate? _currentTemplate
+    {
+        get
+        {
+            var found = _templates.FirstOrDefault(t => t.Id == _selectedTemplateId);
+            if (found == null && _templates.Count > 0)
+            {
+                found = _templates.FirstOrDefault(t => t.IsDefault) ?? _templates[0];
+                _selectedTemplateId = found.Id;
+            }
+            return found;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var cvs = await CvService.GetAllAsync();
+            _cvList = cvs.ToList();
+
+            var templates = await TemplateService.GetAllAsync();
+            _templates = templates.ToList();
+
+            _profile = await ProfileService.GetProfileAsync();
+
+            // Set initial selected CV
+            if (_profile.DefaultCvId.HasValue && _cvList.Any(c => c.Id == _profile.DefaultCvId.Value))
+            {
+                _selectedCvId = _profile.DefaultCvId.Value;
+            }
+            else
+            {
+                var defaultCv = _cvList.FirstOrDefault(c => c.IsDefault) ?? _cvList.FirstOrDefault();
+                if (defaultCv != null) _selectedCvId = defaultCv.Id;
+            }
+
+            // Set initial selected Template
+            if (_profile.DefaultTemplateId.HasValue && _templates.Any(t => t.Id == _profile.DefaultTemplateId.Value))
+            {
+                _selectedTemplateId = _profile.DefaultTemplateId.Value;
+            }
+            else
+            {
+                var defaultT = _templates.FirstOrDefault(t => t.IsDefault) ?? _templates.FirstOrDefault();
+                if (defaultT != null) _selectedTemplateId = defaultT.Id;
+            }
+
+            UpdatePreview();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OnFormChanged()
+    {
+        UpdatePreview();
+    }
+
+    private void UpdatePreview()
+    {
+        var template = _currentTemplate;
+        if (template == null)
+        {
+            _renderedSubject = "";
+            _renderedBody = "";
+            return;
+        }
+
+        var variables = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Name", string.IsNullOrWhiteSpace(_profile.FullName) ? "Your Name" : _profile.FullName },
+            { "Email", string.IsNullOrWhiteSpace(_profile.Email) ? "your.email@domain.com" : _profile.Email },
+            { "Phone", string.IsNullOrWhiteSpace(_profile.Phone) ? "+90 555 000 0000" : _profile.Phone },
+            { "LinkedIn", string.IsNullOrWhiteSpace(_profile.LinkedIn) ? "linkedin.com/in/profile" : _profile.LinkedIn },
+            { "GitHub", string.IsNullOrWhiteSpace(_profile.GitHub) ? "github.com/profile" : _profile.GitHub },
+            { "Website", string.IsNullOrWhiteSpace(_profile.Website) ? "yourwebsite.com" : _profile.Website },
+            { "Company", string.IsNullOrWhiteSpace(_companyName) ? "[Company]" : _companyName },
+            { "Position", string.IsNullOrWhiteSpace(_position) ? "[Position]" : _position }
+        };
+
+        _renderedSubject = TemplateEngine.Render(template.SubjectTemplate, variables);
+        _renderedBody = TemplateEngine.Render(template.BodyTemplate, variables);
+    }
+
+    private async Task HandleEmailCv()
+    {
+        var cv = _currentCv;
+        if (cv == null)
+        {
+            Toast.Error("Please select or import a CV first.");
+            return;
+        }
+
+        var physicalPath = CvService.GetPhysicalPath(cv);
+        if (!File.Exists(physicalPath))
+        {
+            Toast.Error("CV file not found on local storage.");
+            return;
+        }
+
+        _isProcessing = true;
+        try
+        {
+            var success = await EmailComposer.ComposeEmailAsync(
+                _recipientEmail,
+                _renderedSubject,
+                _renderedBody,
+                physicalPath);
+
+            if (success)
+            {
+                Toast.Success("Email composer opened with attached CV!");
+                await HistoryService.RecordActionAsync(
+                    cv.Id,
+                    cv.Name,
+                    _recipientEmail,
+                    _companyName,
+                    _position,
+                    ApplicationStatus.ComposerOpened);
+            }
+            else
+            {
+                Toast.Error("Could not open native email application.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Error: {ex.Message}");
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task HandleShareCv()
+    {
+        var cv = _currentCv;
+        if (cv == null)
+        {
+            Toast.Error("Please select or import a CV first.");
+            return;
+        }
+
+        var physicalPath = CvService.GetPhysicalPath(cv);
+        if (!File.Exists(physicalPath))
+        {
+            Toast.Error("CV file not found on local storage.");
+            return;
+        }
+
+        _isProcessing = true;
+        try
+        {
+            var shareTitle = string.IsNullOrWhiteSpace(_position) ? cv.Name : $"{cv.Name} - {_position}";
+            var success = await ShareService.ShareFileAsync(
+                shareTitle,
+                physicalPath,
+                _renderedBody);
+
+            if (success)
+            {
+                Toast.Success("Share sheet opened!");
+                await HistoryService.RecordActionAsync(
+                    cv.Id,
+                    cv.Name,
+                    _recipientEmail,
+                    _companyName,
+                    _position,
+                    ApplicationStatus.ComposerOpened,
+                    "Shared via system share sheet");
+            }
+            else
+            {
+                Toast.Error("Could not open native share sheet.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Share error: {ex.Message}");
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+}

@@ -1,0 +1,75 @@
+@page "/profile"
+@inject IUserProfileService ProfileService
+@inject IToastService Toast
+
+<div class="profile-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">My Profile</h2>
+    </div>
+
+    <div class="cvtap-card">
+        <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-control" placeholder="e.g. John Doe" @bind="_profile.FullName" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-control" placeholder="e.g. john@example.com" @bind="_profile.Email" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" placeholder="e.g. +90 555 123 4567" @bind="_profile.Phone" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">LinkedIn Profile URL</label>
+            <input type="text" class="form-control" placeholder="e.g. linkedin.com/in/johndoe" @bind="_profile.LinkedIn" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">GitHub Profile URL</label>
+            <input type="text" class="form-control" placeholder="e.g. github.com/johndoe" @bind="_profile.GitHub" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Portfolio / Website</label>
+            <input type="text" class="form-control" placeholder="e.g. johndoe.dev" @bind="_profile.Website" />
+        </div>
+
+        <button class="btn-tap btn-primary-tap mt-2" @onclick="SaveProfileAsync">
+            Save Profile
+        </button>
+    </div>
+
+    <!-- Privacy Card -->
+    <div class="cvtap-card" style="background-color: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3);">
+        <div class="d-flex align-items-start gap-3">
+            <span style="font-size: 1.5rem;">🔒</span>
+            <div>
+                <h4 style="font-size: 0.95rem; font-weight: 700; color: #34d399; margin: 0 0 4px 0;">
+                    Privacy-First & Local-Only
+                </h4>
+                <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0; line-height: 1.45;">
+                    Your CV files and personal profile information never leave this device until you explicitly choose to send them through your own email client or share sheet.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private UserProfile _profile = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _profile = await ProfileService.GetProfileAsync();
+    }
+
+    private async Task SaveProfileAsync()
+    {
+        await ProfileService.SaveProfileAsync(_profile);
+        Toast.Success("Profile saved! Template variables will now use these values.");
+    }
+}

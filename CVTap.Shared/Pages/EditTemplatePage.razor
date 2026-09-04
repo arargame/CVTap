@@ -1,0 +1,129 @@
+@page "/templates/edit"
+@page "/templates/edit/{Id:guid}"
+@inject IEmailTemplateService TemplateService
+@inject ITemplateEngine TemplateEngine
+@inject IToastService Toast
+@inject NavigationManager NavManager
+
+<div class="edit-template-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">
+            @(Id.HasValue ? "Edit Template" : "New Template")
+        </h2>
+        <button class="btn-tap btn-secondary-tap" style="width: auto; min-height: 34px; padding: 4px 12px; font-size: 0.8rem;"
+                @onclick='() => NavManager.NavigateTo("/templates")'>
+            Back
+        </button>
+    </div>
+
+    <div class="cvtap-card">
+        <div class="form-group">
+            <label class="form-label">Template Title *</label>
+            <input type="text" class="form-control" placeholder="e.g. Job Application - English" @bind="_template.Title" />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label class="form-label">Language</label>
+                <select class="form-select" @bind="_template.Language">
+                    <option value="EN">English (EN)</option>
+                    <option value="TR">Türkçe (TR)</option>
+                    <option value="DE">Deutsch (DE)</option>
+                    <option value="FR">Français (FR)</option>
+                </select>
+            </div>
+            <div class="form-group d-flex align-items-center" style="padding-top: 24px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; cursor: pointer;">
+                    <input type="checkbox" @bind="_template.IsDefault" style="width: 18px; height: 18px;" />
+                    <span>Set as Default</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Available Variable Chips -->
+        <div class="form-group">
+            <label class="form-label">Tap to insert into message:</label>
+            <div class="variables-container">
+                @foreach (var variable in TemplateEngine.GetSupportedVariables())
+                {
+                    <span class="variable-chip" @onclick="() => InsertVariable(variable)">
+                        + {@variable}
+                    </span>
+                }
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Subject Line *</label>
+            <input type="text" class="form-control" placeholder="e.g. Application for {Position} - {Name}" @bind="_template.SubjectTemplate" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Message Body *</label>
+            <textarea class="form-control" rows="8" placeholder="Enter email text here..." @bind="_template.BodyTemplate"></textarea>
+        </div>
+
+        <div class="actions-grid mt-3">
+            <button class="btn-tap btn-secondary-tap" @onclick='() => NavManager.NavigateTo("/templates")'>
+                Cancel
+            </button>
+            <button class="btn-tap btn-primary-tap" @onclick="SaveTemplateAsync">
+                Save Template
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private EmailTemplate _template = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            var existing = await TemplateService.GetByIdAsync(Id.Value);
+            if (existing != null)
+            {
+                _template = existing;
+            }
+        }
+        else
+        {
+            _template = new EmailTemplate
+            {
+                Title = "Custom Application",
+                Language = "EN",
+                SubjectTemplate = "Application for {Position} - {Name}",
+                BodyTemplate = "Hello,\n\nI would like to apply for the {Position} role at {Company}.\nPlease find my CV attached.\n\nBest regards,\n{Name}\n{Phone}"
+            };
+        }
+    }
+
+    private void InsertVariable(string variable)
+    {
+        var token = "{" + variable + "}";
+        _template.BodyTemplate += (_template.BodyTemplate.EndsWith(" ") || _template.BodyTemplate.EndsWith("\n") ? "" : " ") + token;
+    }
+
+    private async Task SaveTemplateAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_template.Title))
+        {
+            Toast.Error("Template title cannot be empty.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_template.SubjectTemplate))
+        {
+            Toast.Error("Subject cannot be empty.");
+            return;
+        }
+
+        await TemplateService.SaveAsync(_template);
+        Toast.Success("Template saved successfully.");
+        NavManager.NavigateTo("/templates");
+    }
+}

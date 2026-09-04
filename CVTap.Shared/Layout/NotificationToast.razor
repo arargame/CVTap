@@ -1,0 +1,68 @@
+@inject IToastService ToastService
+@implements IDisposable
+
+@if (_isVisible)
+{
+    <div class="toast-container">
+        <div class="cvtap-toast @GetToastClass()">
+            <span>@_message</span>
+            <button type="button" class="btn-icon" style="width:24px;height:24px;border:none;background:transparent;color:#94a3b8;" @onclick="Hide">✕</button>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _isVisible;
+    private string _message = string.Empty;
+    private ToastLevel _level = ToastLevel.Info;
+    private long _currentToastId;
+
+    protected override void OnInitialized()
+    {
+        ToastService.OnShow += HandleShow;
+    }
+
+    private void HandleShow(string message, ToastLevel level)
+    {
+        _message = message;
+        _level = level;
+        _isVisible = true;
+        var toastId = Interlocked.Increment(ref _currentToastId);
+
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                StateHasChanged();
+                await Task.Delay(3500);
+                if (Interlocked.Read(ref _currentToastId) == toastId)
+                {
+                    _isVisible = false;
+                    StateHasChanged();
+                }
+            }
+            catch
+            {
+                // Component disposed or circuit closed - safe to ignore
+            }
+        });
+    }
+
+    private void Hide()
+    {
+        _isVisible = false;
+        StateHasChanged();
+    }
+
+    private string GetToastClass() => _level switch
+    {
+        ToastLevel.Success => "toast-success",
+        ToastLevel.Danger => "toast-danger",
+        _ => ""
+    };
+
+    public void Dispose()
+    {
+        ToastService.OnShow -= HandleShow;
+    }
+}
