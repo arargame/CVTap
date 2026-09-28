@@ -1,41 +1,286 @@
 @page "/profile"
 @inject IUserProfileService ProfileService
 @inject IToastService Toast
+@inject IClipboardService ClipboardService
 
 <div class="profile-container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">My Profile</h2>
+        @if (_isSaved)
+        {
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge-cvtap badge-default" style="font-size: 0.72rem; padding: 4px 10px;">
+                    ✓ Saved Mode
+                </span>
+                @if (_editingFields.Count > 0)
+                {
+                    <button class="btn-tap btn-secondary-tap" 
+                            style="width: auto; min-height: 28px; padding: 3px 8px; font-size: 0.75rem;" 
+                            @onclick="LockAllFields">
+                        Lock All
+                    </button>
+                }
+            </div>
+        }
     </div>
 
     <div class="cvtap-card">
+        <!-- Full Name -->
         <div class="form-group">
             <label class="form-label">Full Name</label>
-            <input type="text" class="form-control" placeholder="e.g. John Doe" @bind="_profile.FullName" />
+            <div class="input-action-group">
+                <input type="text" 
+                       class="form-control @(IsReadOnly("FullName") ? "has-actions" : (_isSaved ? "has-actions" : ""))" 
+                       placeholder="e.g. John Doe" 
+                       readonly="@IsReadOnly("FullName")"
+                       @bind="_profile.FullName" />
+                @if (IsReadOnly("FullName"))
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-copy @(_justCopiedField == "FullName" ? "copied" : "")" 
+                                title="Copy Full Name" 
+                                @onclick='() => CopyFieldAsync("FullName", _profile.FullName, "Full Name")'>
+                            <span>@(_justCopiedField == "FullName" ? "✓" : "📋")</span>
+                            <span class="action-label">@(_justCopiedField == "FullName" ? "Copied" : "Copy")</span>
+                        </button>
+                        <button type="button" 
+                                class="btn-input-action btn-action-edit" 
+                                title="Edit Full Name" 
+                                @onclick='() => EnableEdit("FullName")'>
+                            <span>✏️</span>
+                            <span class="action-label">Edit</span>
+                        </button>
+                    </div>
+                }
+                else if (_isSaved)
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-done" 
+                                title="Done editing" 
+                                @onclick='() => DoneEdit("FullName")'>
+                            <span>✓</span>
+                            <span class="action-label">Done</span>
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
 
+        <!-- Email Address -->
         <div class="form-group">
             <label class="form-label">Email Address</label>
-            <input type="email" class="form-control" placeholder="e.g. john@example.com" @bind="_profile.Email" />
+            <div class="input-action-group">
+                <input type="email" 
+                       class="form-control @(IsReadOnly("Email") ? "has-actions" : (_isSaved ? "has-actions" : ""))" 
+                       placeholder="e.g. john@example.com" 
+                       readonly="@IsReadOnly("Email")"
+                       @bind="_profile.Email" />
+                @if (IsReadOnly("Email"))
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-copy @(_justCopiedField == "Email" ? "copied" : "")" 
+                                title="Copy Email Address" 
+                                @onclick='() => CopyFieldAsync("Email", _profile.Email, "Email Address")'>
+                            <span>@(_justCopiedField == "Email" ? "✓" : "📋")</span>
+                            <span class="action-label">@(_justCopiedField == "Email" ? "Copied" : "Copy")</span>
+                        </button>
+                        <button type="button" 
+                                class="btn-input-action btn-action-edit" 
+                                title="Edit Email Address" 
+                                @onclick='() => EnableEdit("Email")'>
+                            <span>✏️</span>
+                            <span class="action-label">Edit</span>
+                        </button>
+                    </div>
+                }
+                else if (_isSaved)
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-done" 
+                                title="Done editing" 
+                                @onclick='() => DoneEdit("Email")'>
+                            <span>✓</span>
+                            <span class="action-label">Done</span>
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
 
+        <!-- Phone Number -->
         <div class="form-group">
             <label class="form-label">Phone Number</label>
-            <input type="tel" class="form-control" placeholder="e.g. +90 555 123 4567" @bind="_profile.Phone" />
+            <div class="input-action-group">
+                <input type="tel" 
+                       class="form-control @(IsReadOnly("Phone") ? "has-actions" : (_isSaved ? "has-actions" : ""))" 
+                       placeholder="e.g. +90 555 123 4567" 
+                       readonly="@IsReadOnly("Phone")"
+                       @bind="_profile.Phone" />
+                @if (IsReadOnly("Phone"))
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-copy @(_justCopiedField == "Phone" ? "copied" : "")" 
+                                title="Copy Phone Number" 
+                                @onclick='() => CopyFieldAsync("Phone", _profile.Phone, "Phone Number")'>
+                            <span>@(_justCopiedField == "Phone" ? "✓" : "📋")</span>
+                            <span class="action-label">@(_justCopiedField == "Phone" ? "Copied" : "Copy")</span>
+                        </button>
+                        <button type="button" 
+                                class="btn-input-action btn-action-edit" 
+                                title="Edit Phone Number" 
+                                @onclick='() => EnableEdit("Phone")'>
+                            <span>✏️</span>
+                            <span class="action-label">Edit</span>
+                        </button>
+                    </div>
+                }
+                else if (_isSaved)
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-done" 
+                                title="Done editing" 
+                                @onclick='() => DoneEdit("Phone")'>
+                            <span>✓</span>
+                            <span class="action-label">Done</span>
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
 
+        <!-- LinkedIn Profile URL -->
         <div class="form-group">
             <label class="form-label">LinkedIn Profile URL</label>
-            <input type="text" class="form-control" placeholder="e.g. linkedin.com/in/johndoe" @bind="_profile.LinkedIn" />
+            <div class="input-action-group">
+                <input type="text" 
+                       class="form-control @(IsReadOnly("LinkedIn") ? "has-actions" : (_isSaved ? "has-actions" : ""))" 
+                       placeholder="e.g. linkedin.com/in/johndoe" 
+                       readonly="@IsReadOnly("LinkedIn")"
+                       @bind="_profile.LinkedIn" />
+                @if (IsReadOnly("LinkedIn"))
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-copy @(_justCopiedField == "LinkedIn" ? "copied" : "")" 
+                                title="Copy LinkedIn Profile URL" 
+                                @onclick='() => CopyFieldAsync("LinkedIn", _profile.LinkedIn, "LinkedIn URL")'>
+                            <span>@(_justCopiedField == "LinkedIn" ? "✓" : "📋")</span>
+                            <span class="action-label">@(_justCopiedField == "LinkedIn" ? "Copied" : "Copy")</span>
+                        </button>
+                        <button type="button" 
+                                class="btn-input-action btn-action-edit" 
+                                title="Edit LinkedIn Profile URL" 
+                                @onclick='() => EnableEdit("LinkedIn")'>
+                            <span>✏️</span>
+                            <span class="action-label">Edit</span>
+                        </button>
+                    </div>
+                }
+                else if (_isSaved)
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-done" 
+                                title="Done editing" 
+                                @onclick='() => DoneEdit("LinkedIn")'>
+                            <span>✓</span>
+                            <span class="action-label">Done</span>
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
 
+        <!-- GitHub Profile URL -->
         <div class="form-group">
             <label class="form-label">GitHub Profile URL</label>
-            <input type="text" class="form-control" placeholder="e.g. github.com/johndoe" @bind="_profile.GitHub" />
+            <div class="input-action-group">
+                <input type="text" 
+                       class="form-control @(IsReadOnly("GitHub") ? "has-actions" : (_isSaved ? "has-actions" : ""))" 
+                       placeholder="e.g. github.com/johndoe" 
+                       readonly="@IsReadOnly("GitHub")"
+                       @bind="_profile.GitHub" />
+                @if (IsReadOnly("GitHub"))
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-copy @(_justCopiedField == "GitHub" ? "copied" : "")" 
+                                title="Copy GitHub Profile URL" 
+                                @onclick='() => CopyFieldAsync("GitHub", _profile.GitHub, "GitHub URL")'>
+                            <span>@(_justCopiedField == "GitHub" ? "✓" : "📋")</span>
+                            <span class="action-label">@(_justCopiedField == "GitHub" ? "Copied" : "Copy")</span>
+                        </button>
+                        <button type="button" 
+                                class="btn-input-action btn-action-edit" 
+                                title="Edit GitHub Profile URL" 
+                                @onclick='() => EnableEdit("GitHub")'>
+                            <span>✏️</span>
+                            <span class="action-label">Edit</span>
+                        </button>
+                    </div>
+                }
+                else if (_isSaved)
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-done" 
+                                title="Done editing" 
+                                @onclick='() => DoneEdit("GitHub")'>
+                            <span>✓</span>
+                            <span class="action-label">Done</span>
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
 
+        <!-- Portfolio / Website -->
         <div class="form-group">
             <label class="form-label">Portfolio / Website</label>
-            <input type="text" class="form-control" placeholder="e.g. johndoe.dev" @bind="_profile.Website" />
+            <div class="input-action-group">
+                <input type="text" 
+                       class="form-control @(IsReadOnly("Website") ? "has-actions" : (_isSaved ? "has-actions" : ""))" 
+                       placeholder="e.g. johndoe.dev" 
+                       readonly="@IsReadOnly("Website")"
+                       @bind="_profile.Website" />
+                @if (IsReadOnly("Website"))
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-copy @(_justCopiedField == "Website" ? "copied" : "")" 
+                                title="Copy Portfolio / Website" 
+                                @onclick='() => CopyFieldAsync("Website", _profile.Website, "Website")'>
+                            <span>@(_justCopiedField == "Website" ? "✓" : "📋")</span>
+                            <span class="action-label">@(_justCopiedField == "Website" ? "Copied" : "Copy")</span>
+                        </button>
+                        <button type="button" 
+                                class="btn-input-action btn-action-edit" 
+                                title="Edit Portfolio / Website" 
+                                @onclick='() => EnableEdit("Website")'>
+                            <span>✏️</span>
+                            <span class="action-label">Edit</span>
+                        </button>
+                    </div>
+                }
+                else if (_isSaved)
+                {
+                    <div class="input-action-buttons">
+                        <button type="button" 
+                                class="btn-input-action btn-action-done" 
+                                title="Done editing" 
+                                @onclick='() => DoneEdit("Website")'>
+                            <span>✓</span>
+                            <span class="action-label">Done</span>
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
 
         <button class="btn-tap btn-primary-tap mt-2" @onclick="SaveProfileAsync">
@@ -61,15 +306,86 @@
 
 @code {
     private UserProfile _profile = new();
+    private bool _isSaved = false;
+    private readonly HashSet<string> _editingFields = new(StringComparer.OrdinalIgnoreCase);
+    private string? _justCopiedField;
 
     protected override async Task OnInitializedAsync()
     {
         _profile = await ProfileService.GetProfileAsync();
+        // If there is existing saved data, initialize in saved readonly mode
+        _isSaved = HasExistingProfileData(_profile);
+    }
+
+    private bool HasExistingProfileData(UserProfile profile)
+    {
+        return !string.IsNullOrWhiteSpace(profile.FullName) ||
+               !string.IsNullOrWhiteSpace(profile.Email) ||
+               !string.IsNullOrWhiteSpace(profile.Phone) ||
+               !string.IsNullOrWhiteSpace(profile.LinkedIn) ||
+               !string.IsNullOrWhiteSpace(profile.GitHub) ||
+               !string.IsNullOrWhiteSpace(profile.Website);
+    }
+
+    private bool IsReadOnly(string fieldKey)
+    {
+        return _isSaved && !_editingFields.Contains(fieldKey);
+    }
+
+    private void EnableEdit(string fieldKey)
+    {
+        _editingFields.Add(fieldKey);
+    }
+
+    private void DoneEdit(string fieldKey)
+    {
+        _editingFields.Remove(fieldKey);
+    }
+
+    private void LockAllFields()
+    {
+        _editingFields.Clear();
+    }
+
+    private async Task CopyFieldAsync(string fieldKey, string? value, string label)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            Toast.Warning($"{label} is empty.");
+            return;
+        }
+
+        var success = await ClipboardService.SetTextAsync(value);
+        if (success)
+        {
+            _justCopiedField = fieldKey;
+            Toast.Success($"{label} copied to clipboard!");
+            StateHasChanged();
+
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(1800);
+                await InvokeAsync(() =>
+                {
+                    if (_justCopiedField == fieldKey)
+                    {
+                        _justCopiedField = null;
+                        StateHasChanged();
+                    }
+                });
+            });
+        }
+        else
+        {
+            Toast.Error($"Failed to copy {label}.");
+        }
     }
 
     private async Task SaveProfileAsync()
     {
         await ProfileService.SaveProfileAsync(_profile);
+        _isSaved = true;
+        _editingFields.Clear();
         Toast.Success("Profile saved! Template variables will now use these values.");
     }
 }

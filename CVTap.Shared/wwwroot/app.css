@@ -431,3 +431,126 @@ textarea.form-control {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* Input with Actions (Readonly, Copy, Edit) */
+.input-action-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.input-action-group .form-control {
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.input-action-group .form-control.has-actions {
+    padding-right: 145px;
+}
+
+.input-action-group .form-control:read-only {
+    background-color: rgba(15, 23, 42, 0.75);
+    color: #f1f5f9;
+    border-color: rgba(51, 65, 85, 0.7);
+    cursor: default;
+}
+
+.input-action-group .form-control:read-only:focus {
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.input-action-buttons {
+    position: absolute;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 2;
+}
+
+.btn-input-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 9px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.btn-input-action:hover {
+    background-color: #475569;
+    border-color: #64748b;
+    transform: translateY(-1px);
+}
+
+.btn-input-action:active {
+    transform: translateY(0);
+}
+
+.btn-input-action.btn-action-copy {
+    background-color: rgba(99, 102, 241, 0.18);
+    border-color: rgba(99, 102, 241, 0.4);
+    color: #c7d2fe;
+}
+
+.btn-input-action.btn-action-copy:hover {
+    background-color: rgba(99, 102, 241, 0.35);
+    border-color: #818cf8;
+    color: #ffffff;
+}
+
+.btn-input-action.btn-action-copy.copied {
+    background-color: rgba(16, 185, 129, 0.25);
+    border-color: #10b981;
+    color: #34d399;
+}
+
+.btn-input-action.btn-action-edit {
+    background-color: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fde68a;
+}
+
+.btn-input-action.btn-action-edit:hover {
+    background-color: rgba(245, 158, 11, 0.35);
+    border-color: #fbbf24;
+    color: #ffffff;
+}
+
+.btn-input-action.btn-action-done {
+    background-color: rgba(16, 185, 129, 0.18);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #a7f3d0;
+}
+
+.btn-input-action.btn-action-done:hover {
+    background-color: rgba(16, 185, 129, 0.35);
+    border-color: #34d399;
+    color: #ffffff;
+}
+
+@media (max-width: 480px) {
+    .input-action-group .form-control.has-actions {
+        padding-right: 90px;
+    }
+
+    .btn-input-action .action-label {
+        display: none;
+    }
+
+    .btn-input-action {
+        padding: 6px 8px;
+    }
+}
+

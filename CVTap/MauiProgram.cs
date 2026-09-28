@@ -35,6 +35,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IEmailComposerService, MobileEmailComposerService>();
         builder.Services.AddSingleton<IShareService, MobileShareService>();
         builder.Services.AddSingleton<IHtmlToPdfService, MobileHtmlToPdfService>();
+        builder.Services.AddSingleton<IClipboardService, MobileClipboardService>();
 
         builder.Services.AddMauiBlazorWebView();
 

@@ -37,6 +37,7 @@ builder.Services.AddSingleton<ICvStorageService, WebCvStorageService>();
 builder.Services.AddScoped<IEmailComposerService, WebEmailComposerService>();
 builder.Services.AddScoped<IShareService, WebShareService>();
 builder.Services.AddSingleton<IHtmlToPdfService, WebHtmlToPdfService>();
+builder.Services.AddScoped<IClipboardService, WebClipboardService>();
 
 var app = builder.Build();
 
