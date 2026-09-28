@@ -16,21 +16,35 @@
         </div>
     </div>
 
-    <!-- Hidden / Web file input support for web browser mode -->
+    <!-- PDF Import Card -->
     <div class="cvtap-card mb-3" style="border-style: dashed; background-color: rgba(30, 41, 59, 0.5);">
-        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 8px;">
-            Select PDF file from device:
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">
+                📄 Add New CV
+            </span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">
+                PDF format only
+            </span>
         </div>
         <div class="form-group mb-2">
             <input type="text" class="form-control mb-2" placeholder="CV Profile Name (e.g. .NET Developer CV - EN)" 
                    @bind="_newCvFriendlyName" />
             <div class="d-flex gap-2">
-                <select class="form-select" style="max-width: 100px;" @bind="_newCvLanguage">
+                <select class="form-select" style="max-width: 90px;" @bind="_newCvLanguage">
                     <option value="EN">EN</option>
                     <option value="TR">TR</option>
                     <option value="DE">DE</option>
                 </select>
-                <InputFile OnChange="HandleWebFileSelected" accept=".pdf" class="form-control" />
+                <button type="button" class="btn-tap btn-primary-tap" style="flex: 1; min-height: 42px; font-size: 0.85rem;"
+                        @onclick="TriggerNativeImport" disabled="@_isImporting">
+                    <span>📁</span>
+                    <span>@(_isImporting ? "Selecting..." : "Browse & Import PDF")</span>
+                </button>
+            </div>
+            <!-- Secondary web upload fallback -->
+            <div class="mt-2 text-center" style="font-size: 0.75rem; color: var(--text-muted);">
+                <span>Or select via browser: </span>
+                <InputFile OnChange="HandleWebFileSelected" accept="application/pdf,application/x-pdf,.pdf" style="font-size: 0.75rem; color: var(--text-secondary);" />
             </div>
         </div>
     </div>
