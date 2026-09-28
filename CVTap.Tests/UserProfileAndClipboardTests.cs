@@ -60,6 +60,36 @@ public class UserProfileAndClipboardTests : IDisposable
         Assert.Equal("https://github.com/arargame", clipboard.CurrentText);
     }
 
+    [Fact]
+    public async Task ThemeService_ToggleThemeAsync_ShouldSwitchAndPersistTheme()
+    {
+        // Arrange
+        var profileService = new UserProfileService(_database);
+        var themeService = new ThemeService(profileService);
+
+        // Act 1: Initialize (default dark)
+        await themeService.InitializeAsync();
+        Assert.Equal(AppThemeMode.Dark, themeService.CurrentTheme);
+        Assert.Equal("theme-dark", themeService.ThemeClass);
+        Assert.True(themeService.IsDark);
+
+        // Act 2: Toggle to Light
+        await themeService.ToggleThemeAsync();
+        Assert.Equal(AppThemeMode.Light, themeService.CurrentTheme);
+        Assert.Equal("theme-light", themeService.ThemeClass);
+        Assert.False(themeService.IsDark);
+
+        // Assert persistence in profile
+        var profile = await profileService.GetProfileAsync();
+        Assert.Equal("light", profile.ThemeMode);
+
+        // Act 3: Toggle back to Dark
+        await themeService.ToggleThemeAsync();
+        Assert.Equal(AppThemeMode.Dark, themeService.CurrentTheme);
+        Assert.Equal("theme-dark", themeService.ThemeClass);
+        Assert.True(themeService.IsDark);
+    }
+
     public void Dispose()
     {
         try

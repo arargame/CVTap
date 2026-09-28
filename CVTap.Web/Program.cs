@@ -30,6 +30,7 @@ builder.Services.AddScoped<IToastService, ToastService>();
 builder.Services.AddSingleton<ITemplateEngine, TemplateEngine>();
 builder.Services.AddSingleton<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddSingleton<IUserProfileService, UserProfileService>();
+builder.Services.AddScoped<IThemeService, ThemeService>();
 builder.Services.AddSingleton<IApplicationHistoryService, ApplicationHistoryService>();
 
 // Web Platform Services

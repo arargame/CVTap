@@ -28,6 +28,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ITemplateEngine, TemplateEngine>();
         builder.Services.AddSingleton<IEmailTemplateService, EmailTemplateService>();
         builder.Services.AddSingleton<IUserProfileService, UserProfileService>();
+        builder.Services.AddSingleton<IThemeService, ThemeService>();
         builder.Services.AddSingleton<IApplicationHistoryService, ApplicationHistoryService>();
 
         // Native / Platform Services

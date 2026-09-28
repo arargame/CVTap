@@ -23,5 +23,7 @@ public class UserProfile
 
     public Guid? DefaultTemplateId { get; set; }
 
+    public string ThemeMode { get; set; } = "dark";
+
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

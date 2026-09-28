@@ -1,6 +1,8 @@
 @inherits LayoutComponentBase
+@inject IThemeService ThemeService
+@implements IDisposable
 
-<div class="app-container">
+<div class="app-container @ThemeService.ThemeClass">
     <header class="app-header">
         <div class="brand-wrapper">
             <h1 class="brand-title">
@@ -8,7 +10,14 @@
             </h1>
             <p class="brand-slogan">Send your CV in a few taps.</p>
         </div>
-        <div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" 
+                    class="btn-theme-toggle" 
+                    title="@(ThemeService.IsDark ? "Switch to Light Mode" : "Switch to Dark Mode")"
+                    @onclick="ThemeService.ToggleThemeAsync">
+                <span class="theme-icon">@(ThemeService.IsDark ? "☀️" : "🌙")</span>
+                <span class="theme-text">@(ThemeService.IsDark ? "Light" : "Dark")</span>
+            </button>
             <span class="badge-cvtap badge-default">Local Only</span>
         </div>
     </header>
@@ -32,7 +41,7 @@
                     <p style="color: #ffffff; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">
                         @ex.Message
                     </p>
-                    <div style="background: #0b1120; border: 1px solid #334155; border-radius: 6px; padding: 10px; max-height: 180px; overflow: auto;">
+                    <div style="background: var(--input-bg, #0b1120); border: 1px solid var(--border-color, #334155); border-radius: 6px; padding: 10px; max-height: 180px; overflow: auto;">
                         <pre style="color: #fda4af; font-size: 0.7rem; margin: 0; white-space: pre-wrap;">@ex.ToString()</pre>
                     </div>
                 </div>
@@ -52,8 +61,24 @@
 @code {
     private ErrorBoundary? _errorBoundary;
 
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.OnThemeChanged += HandleThemeChanged;
+        await ThemeService.InitializeAsync();
+    }
+
+    private void HandleThemeChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
     protected override void OnParametersSet()
     {
         _errorBoundary?.Recover();
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= HandleThemeChanged;
     }
 }

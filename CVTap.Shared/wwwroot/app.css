@@ -1,4 +1,4 @@
-:root {
+:root, .theme-dark {
     --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
     --bg-tertiary: #334155;
@@ -15,6 +15,19 @@
     --accent-rose: #f43f5e;
     --border-color: #334155;
     --border-subtle: #1e293b;
+    --header-bg: rgba(15, 23, 42, 0.85);
+    --nav-bg: rgba(15, 23, 42, 0.95);
+    --input-bg: #0b1120;
+    --input-readonly-bg: rgba(15, 23, 42, 0.75);
+    --preview-bg: #0b1120;
+    --preview-header-bg: #162032;
+    --preview-body-color: #e2e8f0;
+    --chip-bg: #1e293b;
+    --chip-border: #475569;
+    --chip-color: #a5b4fc;
+    --theme-btn-bg: rgba(99, 102, 241, 0.15);
+    --theme-btn-border: rgba(99, 102, 241, 0.35);
+    --theme-btn-color: #e0e7ff;
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
@@ -23,6 +36,41 @@
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
     --bottom-nav-height: 68px;
+}
+
+.theme-light {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e2e8f0;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --accent-indigo: #4f46e5;
+    --accent-indigo-hover: #4338ca;
+    --accent-emerald: #059669;
+    --accent-emerald-hover: #047857;
+    --accent-amber: #d97706;
+    --accent-rose: #e11d48;
+    --border-color: #cbd5e1;
+    --border-subtle: #e2e8f0;
+    --header-bg: rgba(255, 255, 255, 0.92);
+    --nav-bg: rgba(255, 255, 255, 0.95);
+    --input-bg: #f8fafc;
+    --input-readonly-bg: #f1f5f9;
+    --preview-bg: #f8fafc;
+    --preview-header-bg: #f1f5f9;
+    --preview-body-color: #1e293b;
+    --chip-bg: #ede9fe;
+    --chip-border: #c7d2fe;
+    --chip-color: #4338ca;
+    --theme-btn-bg: #e0e7ff;
+    --theme-btn-border: #c7d2fe;
+    --theme-btn-color: #3730a3;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -47,8 +95,10 @@ html, body {
     max-width: 600px;
     margin: 0 auto;
     background-color: var(--bg-primary);
+    color: var(--text-primary);
     position: relative;
     padding-bottom: calc(var(--bottom-nav-height) + 16px);
+    transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* App Header */
@@ -56,14 +106,15 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
-    background: rgba(15, 23, 42, 0.85);
+    padding: 14px 20px;
+    background: var(--header-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 100;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .brand-wrapper {
@@ -75,7 +126,7 @@ html, body {
     font-size: 1.35rem;
     font-weight: 800;
     letter-spacing: -0.025em;
-    color: #ffffff;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -94,6 +145,48 @@ html, body {
     margin-top: 2px;
 }
 
+/* Theme Toggle Button */
+.btn-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border-radius: var(--radius-full);
+    background-color: var(--theme-btn-bg);
+    border: 1px solid var(--theme-btn-border);
+    color: var(--theme-btn-color);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.btn-theme-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    opacity: 0.95;
+}
+
+.btn-theme-toggle:active {
+    transform: translateY(0);
+}
+
+.btn-theme-toggle .theme-icon {
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+@media (max-width: 480px) {
+    .btn-theme-toggle .theme-text {
+        display: none;
+    }
+    .btn-theme-toggle {
+        padding: 6px 8px;
+    }
+}
+
 /* Main Content Area */
 .app-main {
     flex: 1;
@@ -108,6 +201,7 @@ html, body {
     padding: 18px;
     margin-bottom: 16px;
     box-shadow: var(--shadow-md);
+    transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .cvtap-card-header {
@@ -139,12 +233,12 @@ html, body {
     width: 100%;
     padding: 11px 14px;
     font-size: 0.95rem;
-    background-color: #0b1120;
+    background-color: var(--input-bg);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s, color 0.2s;
 }
 
 .form-control:focus, .form-select:focus {
@@ -208,7 +302,7 @@ textarea.form-control {
 }
 
 .btn-secondary-tap:hover {
-    background-color: #475569;
+    filter: brightness(1.1);
 }
 
 .btn-danger-tap {
@@ -233,6 +327,11 @@ textarea.form-control {
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-icon:hover {
+    filter: brightness(1.1);
 }
 
 /* Variable Chips */
@@ -244,9 +343,9 @@ textarea.form-control {
 }
 
 .variable-chip {
-    background-color: #1e293b;
-    border: 1px solid #475569;
-    color: #a5b4fc;
+    background-color: var(--chip-bg);
+    border: 1px solid var(--chip-border);
+    color: var(--chip-color);
     font-size: 0.75rem;
     font-weight: 600;
     padding: 4px 10px;
@@ -257,9 +356,7 @@ textarea.form-control {
 }
 
 .variable-chip:hover {
-    background-color: #312e81;
-    border-color: var(--accent-indigo);
-    color: #ffffff;
+    filter: brightness(1.1);
 }
 
 /* Badges */
@@ -286,17 +383,18 @@ textarea.form-control {
 
 /* Email Preview Card */
 .preview-card {
-    background-color: #0b1120;
-    border: 1px solid #334155;
+    background-color: var(--preview-bg);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     overflow: hidden;
     margin-bottom: 18px;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .preview-header {
-    background-color: #162032;
+    background-color: var(--preview-header-bg);
     padding: 10px 14px;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border-color);
     font-size: 0.8rem;
     color: var(--text-secondary);
 }
@@ -322,7 +420,7 @@ textarea.form-control {
     padding: 14px;
     font-size: 0.88rem;
     line-height: 1.55;
-    color: #e2e8f0;
+    color: var(--preview-body-color);
     white-space: pre-wrap;
     max-height: 220px;
     overflow-y: auto;
@@ -338,7 +436,7 @@ textarea.form-control {
     border: 1px dashed rgba(99, 102, 241, 0.4);
     border-radius: var(--radius-sm);
     font-size: 0.82rem;
-    color: #a5b4fc;
+    color: var(--accent-indigo);
 }
 
 /* Bottom Navigation */
@@ -348,7 +446,7 @@ textarea.form-control {
     left: 0;
     right: 0;
     height: var(--bottom-nav-height);
-    background: rgba(15, 23, 42, 0.95);
+    background: var(--nav-bg);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid var(--border-color);
@@ -359,6 +457,7 @@ textarea.form-control {
     max-width: 600px;
     margin: 0 auto;
     padding-bottom: env(safe-area-inset-bottom);
+    transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .nav-tab {
@@ -405,8 +504,8 @@ textarea.form-control {
 }
 
 .cvtap-toast {
-    background-color: #1e293b;
-    color: #ffffff;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
     border: 1px solid var(--border-color);
     border-left: 4px solid var(--accent-indigo);
     border-radius: var(--radius-sm);
@@ -425,6 +524,10 @@ textarea.form-control {
 
 .cvtap-toast.toast-danger {
     border-left-color: var(--accent-rose);
+}
+
+.cvtap-toast.toast-warning {
+    border-left-color: var(--accent-amber);
 }
 
 @keyframes slideDown {
@@ -450,14 +553,14 @@ textarea.form-control {
 }
 
 .input-action-group .form-control:read-only {
-    background-color: rgba(15, 23, 42, 0.75);
-    color: #f1f5f9;
-    border-color: rgba(51, 65, 85, 0.7);
+    background-color: var(--input-readonly-bg);
+    color: var(--text-primary);
+    border-color: var(--border-color);
     cursor: default;
 }
 
 .input-action-group .form-control:read-only:focus {
-    border-color: rgba(99, 102, 241, 0.4);
+    border-color: var(--accent-indigo);
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
 }
 
@@ -489,8 +592,7 @@ textarea.form-control {
 }
 
 .btn-input-action:hover {
-    background-color: #475569;
-    border-color: #64748b;
+    filter: brightness(1.1);
     transform: translateY(-1px);
 }
 
@@ -501,42 +603,39 @@ textarea.form-control {
 .btn-input-action.btn-action-copy {
     background-color: rgba(99, 102, 241, 0.18);
     border-color: rgba(99, 102, 241, 0.4);
-    color: #c7d2fe;
+    color: var(--accent-indigo);
 }
 
 .btn-input-action.btn-action-copy:hover {
     background-color: rgba(99, 102, 241, 0.35);
-    border-color: #818cf8;
     color: #ffffff;
 }
 
 .btn-input-action.btn-action-copy.copied {
     background-color: rgba(16, 185, 129, 0.25);
     border-color: #10b981;
-    color: #34d399;
+    color: #10b981;
 }
 
 .btn-input-action.btn-action-edit {
     background-color: rgba(245, 158, 11, 0.18);
     border-color: rgba(245, 158, 11, 0.4);
-    color: #fde68a;
+    color: var(--accent-amber);
 }
 
 .btn-input-action.btn-action-edit:hover {
     background-color: rgba(245, 158, 11, 0.35);
-    border-color: #fbbf24;
     color: #ffffff;
 }
 
 .btn-input-action.btn-action-done {
     background-color: rgba(16, 185, 129, 0.18);
     border-color: rgba(16, 185, 129, 0.4);
-    color: #a7f3d0;
+    color: var(--accent-emerald);
 }
 
 .btn-input-action.btn-action-done:hover {
     background-color: rgba(16, 185, 129, 0.35);
-    border-color: #34d399;
     color: #ffffff;
 }
 
@@ -553,4 +652,3 @@ textarea.form-control {
         padding: 6px 8px;
     }
 }
-
