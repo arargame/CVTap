@@ -23,19 +23,19 @@
         @foreach (var t in _templates)
         {
             <div class="cvtap-card">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <span style="font-weight: 700; font-size: 1.05rem;">@t.Title</span>
+                <div class="cv-card-header mb-2">
+                    <div class="cv-card-title-row">
+                        <span class="cv-card-title">@t.Title</span>
+                        <div class="cv-card-badges">
                             @if (t.IsDefault)
                             {
                                 <span class="badge-cvtap badge-default">★ Default</span>
                             }
                             <span class="badge-cvtap badge-lang">@t.Language</span>
                         </div>
-                        <div style="font-size: 0.82rem; color: #a5b4fc; margin-top: 4px;">
-                            <strong>Subject:</strong> @t.SubjectTemplate
-                        </div>
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--accent-indigo); margin-top: 4px; word-break: break-word;">
+                        <strong>Subject:</strong> @t.SubjectTemplate
                     </div>
                 </div>
 

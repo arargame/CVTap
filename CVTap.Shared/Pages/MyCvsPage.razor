@@ -70,19 +70,21 @@
         @foreach (var cv in _cvList)
         {
             <div class="cvtap-card">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <span style="font-weight: 700; font-size: 1.05rem;">@cv.Name</span>
+                <div class="cv-card-header mb-2">
+                    <div class="cv-card-title-row">
+                        <span class="cv-card-title">@cv.Name</span>
+                        <div class="cv-card-badges">
                             @if (cv.IsDefault)
                             {
                                 <span class="badge-cvtap badge-default">★ Default</span>
                             }
                             <span class="badge-cvtap badge-lang">@cv.Language</span>
                         </div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">
-                            <span>📄 @cv.FileName</span> • <span>@cv.FormattedSize</span>
-                        </div>
+                    </div>
+                    <div class="cv-card-meta">
+                        <span class="cv-meta-filename">📄 @cv.FileName</span>
+                        <span class="cv-meta-dot">•</span>
+                        <span class="cv-meta-size">@cv.FormattedSize</span>
                     </div>
                 </div>
 

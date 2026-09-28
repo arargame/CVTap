@@ -202,6 +202,8 @@ html, body {
     margin-bottom: 16px;
     box-shadow: var(--shadow-md);
     transition: background-color 0.25s ease, border-color 0.25s ease;
+    overflow: hidden;
+    word-break: break-word;
 }
 
 .cvtap-card-header {
@@ -367,6 +369,11 @@ textarea.form-control {
     border-radius: var(--radius-full);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1.2;
 }
 
 .badge-default {
@@ -379,6 +386,67 @@ textarea.form-control {
     background-color: rgba(16, 185, 129, 0.2);
     color: #34d399;
     border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+/* CV & Template Card Layout - Prevents Badge & Title Overflow */
+.cv-card-header {
+    width: 100%;
+    min-width: 0;
+}
+
+.cv-card-title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+
+.cv-card-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    min-width: 0;
+    line-height: 1.35;
+}
+
+.cv-card-badges {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.cv-card-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+}
+
+.cv-meta-filename {
+    word-break: break-all;
+    overflow-wrap: anywhere;
+}
+
+.cv-meta-dot {
+    color: var(--text-muted);
+    user-select: none;
+}
+
+.cv-meta-size {
+    white-space: nowrap;
+    color: var(--text-secondary);
 }
 
 /* Email Preview Card */
